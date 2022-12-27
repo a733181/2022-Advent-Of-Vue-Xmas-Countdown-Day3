@@ -1,69 +1,75 @@
-<script setup>
-import CountdownHeader from '@/components/CountdownHeader.vue'
-import CountdownSegment from './components/CountdownSegment.vue'
-import { useNow } from '@vueuse/core'
-import { computed } from 'vue'
-const now = useNow()
-
-const christmas = new Date('12/25/2022 00:00:00')
-
-const days = computed(() => {
-  const one_day = 1000 * 60 * 60 * 24
-  return (christmas.getTime() - now.value.getTime()) / one_day
-})
-const daysRounded = computed(() => {
-  return Math.floor(days.value)
-})
-
-const hours = computed(() => {
-  return 24 * (days.value - daysRounded.value)
-})
-
-const hoursRounded = computed(() => {
-  return Math.floor(hours.value)
-})
-
-const minutes = computed(() => {
-  return 60 * (hours.value - hoursRounded.value)
-})
-
-const minutesRounded = computed(() => {
-  return Math.floor(minutes.value)
-})
-
-const seconds = computed(() => {
-  return 60 * (minutes.value - minutesRounded.value)
-})
-
-const secondsRounded = computed(() => {
-  return Math.floor(seconds.value)
-})
-</script>
 <template>
-  <div class="w-full h-full flex justify-center items-center p-10">
-    <div>
-      <div class="shadow-md relative bg-white p-5 rounded-lg border-gray-100 border-[1px]">
-        <CountdownHeader />
-        <main class="flex justify-center">
-          <CountdownSegment label="days" :number="daysRounded" />
-          <CountdownSegment label="hours" :number="hoursRounded" />
-          <CountdownSegment label="minutes" :number="minutesRounded" />
-          <CountdownSegment label="seconds" :number="secondsRounded" />
-        </main>
-      </div>
-      <h4 class="mt-10 text-gray-400 text-center text-sm">
-        This challenge brought to you by <a href="https://vueschool.io/" class="underline">Vue School</a>
-      </h4>
+  <div class="h-full flex justify-center items-center">
+    <div class="p-10 shadow-lg shadow-orange-200 border-4 border-orange-200">
+      <h1 class="text-center text-blue-400 text-4xl mb-10">
+        <span class="block">{{ setYear }}</span
+        >Christmas Countdown
+      </h1>
+      <ul class="flex items-center justify-around">
+        <li class="text-center">
+          <p class="text-red-300 text-xl">{{ reciprocal.day }}</p>
+          <p class="text-orange-600">Days</p>
+        </li>
+        <li class="text-center">
+          <p class="text-red-300 text-xl">{{ reciprocal.hour }}</p>
+          <p class="text-orange-600">Hours</p>
+        </li>
+        <li class="text-center">
+          <p class="text-red-300 text-xl">{{ reciprocal.min }}</p>
+          <p class="text-orange-600">Minutes</p>
+        </li>
+        <li class="text-center">
+          <p class="text-red-300 text-xl">{{ reciprocal.sec }}</p>
+          <p class="text-orange-600">seconds</p>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
-<style>
-div {
-  display: block;
+<script setup>
+import { reactive, onMounted } from 'vue'
+const today = new Date()
+const setMouthDay = '/12/25'
+const setYear =
+  new Date(today.getFullYear() + setMouthDay).getTime() - today.getTime() > 0
+    ? today.getFullYear()
+    : today.getFullYear() + 1
+
+const timestamp = {
+  christmasDayTime: new Date(setYear + setMouthDay).getTime(),
+  todayTime: today.getTime(),
+  dayTime: 1000 * 60 * 60 * 24,
+  hoursTime: 1000 * 60 * 60,
+  minTime: 1000 * 60,
+  secTime: 1000,
 }
 
-body {
-  @apply bg-gray-100;
+const reciprocal = reactive({})
+
+const contdownDay = () => {
+  reciprocal.day = Math.floor(reciprocal.gap / timestamp.dayTime)
+  timestamp.dayTimeTamp = timestamp.dayTime * reciprocal.day
+
+  reciprocal.hour = Math.floor((reciprocal.gap - timestamp.dayTimeTamp) / timestamp.hoursTime)
+  timestamp.hourTimeTamp = timestamp.hoursTime * reciprocal.hour
+
+  reciprocal.min = Math.floor((reciprocal.gap - timestamp.dayTimeTamp - timestamp.hourTimeTamp) / timestamp.minTime)
+  timestamp.minTimeTamp = timestamp.minTime * reciprocal.min
+
+  reciprocal.sec = Math.floor(
+    (reciprocal.gap - timestamp.dayTimeTamp - timestamp.hourTimeTamp - timestamp.minTimeTamp) / timestamp.secTime
+  )
 }
-</style>
+
+const contdownTimer = setInterval(() => {
+  reciprocal.gap -= 1000
+  contdownDay()
+}, 1000)
+
+onMounted(() => {
+  reciprocal.gap = timestamp.christmasDayTime - timestamp.todayTime
+  contdownDay()
+  contdownTimer
+})
+</script>
